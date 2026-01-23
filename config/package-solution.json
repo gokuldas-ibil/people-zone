@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "people-zone-client-side-solution",
+    "id": "d46acdb0-535b-46af-9691-c745cb5504db",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.20.0"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "people-zone description"
+      },
+      "longDescription": {
+        "default": "people-zone description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "people-zone Feature",
+        "description": "The feature that activates elements of the people-zone solution.",
+        "id": "2e1ba27b-d5aa-4f8a-b3c6-2f0ceb6dcbdc",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/people-zone.sppkg"
+  }
+}

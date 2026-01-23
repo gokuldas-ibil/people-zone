@@ -1,0 +1,18 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "people-zone-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/peopleZone/PeopleZoneWebPart.js",
+          "manifest": "./src/webparts/peopleZone/PeopleZoneWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "PeopleZoneWebPartStrings": "lib/webparts/peopleZone/loc/{locale}.js"
+  }
+}
