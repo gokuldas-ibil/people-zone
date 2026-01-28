@@ -20,12 +20,6 @@ const PeopleZone: React.FC<IPeopleZoneProps> = (props) => {
   const [error, setError] = React.useState<string | null>(null);
   const [route, setRoute] = React.useState<Route>('dashboard');
 
-  // Fetch total employee and department counts when the component mounts
-  React.useEffect(() => {
-    fetchTotals();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // Helper: Get initials from a name string
   const getInitials = (name: string): string => {
     if (!name) return '??';
@@ -66,11 +60,33 @@ const PeopleZone: React.FC<IPeopleZoneProps> = (props) => {
       console.error('Error fetching employees from Graph API:', err);
     }
   };
-
+  // Fetch total employee and department counts when the component mounts
+  React.useEffect(() => {
+    fetchTotals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   console.log(Item);
 
-  // Navigation handler
-  const handleNavigate = (to: Route) => setRoute(to);
+  //Sync route with URL hash
+  React.useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash === 'employees' || hash === 'departments' || hash === 'dashboard') {
+        setRoute(hash as Route);
+      } else {
+        setRoute('dashboard');
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    handleHashChange();
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Navigation handler using window.location.href (full reload)
+  const handleNavigate = (to: Route) => {
+    window.location.href = `${props.context.pageContext.web.absoluteUrl}${window.location.pathname.replace(props.context.pageContext.web.serverRelativeUrl, '')}#${to}`;
+    setRoute(to);
+  };
 
   // Render the UI: loading, error, no data, or the appropriate page (dashboard, employee list, or department list)
   return (

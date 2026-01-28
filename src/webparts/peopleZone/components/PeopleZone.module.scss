@@ -2,6 +2,7 @@
 
 $cyan-main: #00bcd4;
 $cyan-dark: #0097a7;
+$text-dark: #222;
 $cyan-light: #e0f7fa;
 $cyan-gradient: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%);
 
@@ -281,4 +282,175 @@ $cyan-gradient: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%);
     color: $cyan-main;
     text-decoration: underline;
   }
+}
+
+// Add to PeopleZone.module.scss or a new CSS module
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: #fff;
+  padding: 4rem;
+  border-radius: 8px;
+  min-width: 320px;
+  max-width: 120vw;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.addButton {
+  background: #0078d4;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+// Flex row for form fields
+.formRow {
+  display: flex;
+  gap: 4rem;
+  flex-wrap: wrap;
+
+  // Make children grow equally
+  >.formGroup {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+// Enhanced form styling
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+
+  // Form group label
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: $text-dark;
+    letter-spacing: 0.2px;
+  }
+
+  // Form group input
+  input,
+  select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid $cyan-main;
+    border-radius: 6px;
+    font-size: 1em;
+    background: #f7fcfd;
+    color: #222;
+    transition: border 0.2s, box-shadow 0.2s;
+
+    &:focus {
+      border-color: $cyan-dark;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.15);
+    }
+  }
+
+  input[type="date"] {
+    color: #222;
+  }
+}
+
+.formActions button[type="submit"] {
+  background: $cyan-main;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.6rem;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: $cyan-dark;
+  }
+}
+
+.formActions button[type="button"] {
+  background: #fff;
+  color: $cyan-dark;
+  border: 1.5px solid $cyan-main;
+  border-radius: 6px;
+  padding: 0.6rem 1.6rem;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+
+  &:hover {
+    background: $cyan-light;
+    color: $cyan-main;
+  }
+}
+
+// Modal header
+.modalContent h3 {
+  color: $cyan-dark;
+  font-size: 1.5em;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+// Add subtle divider between form fields
+.formGroup:not(:last-child) {
+  border-bottom: 1px solid #e0f7fa;
+  padding-bottom: 0.7rem;
+  margin-bottom: 0.7rem;
+}
+
+// Responsive modal
+@media (max-width: 600px) {
+  .modalContent {
+    padding: 1rem;
+    min-width: 90vw;
+  }
+
+  .formActions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+// Responsive: stack form fields vertically on small screens
+@media (max-width: 600px) {
+  .formRow {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+// Add a subtle shadow to the modal
+.modalContent {
+  box-shadow: 0 4px 24px rgba(0, 188, 212, 0.13);
 }

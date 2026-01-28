@@ -1,3 +1,9 @@
+export interface EmployeePageProps {
+  context: any;
+  getInitials: (name: string) => string;
+  getProfileImageUrl: (employee: IEmployee) => string | null;
+}
+
 export interface IEmployee {
   Id: number;
   Title: string; // Full name
@@ -18,4 +24,16 @@ export interface IEmployee {
   DateOfJoining?: string;
   Status?: string;
   ProfilePhoto?: string;
+}
+
+export interface EmployeeForm {
+  Title: string; // Full name
+  EmployeeID: string;
+  Email: string;
+  DepartmentLookupId: string;
+  Role: string;
+  Manager: string;
+  DateOfJoining: string;
+  Status: string;
+  ProfilePhoto: string;
 }

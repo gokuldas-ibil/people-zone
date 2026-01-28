@@ -63,37 +63,73 @@ export class GraphService {
     }));
   }
 
-  // public async getTotalEmployees(): Promise<number> {
-  //   const res = await this.client
-  //     .api(`/sites/${this.siteId}/lists/${this.listId}/items`)
-  //     .query({ $top: 1, $count: 'true' })
-  //     .header('ConsistencyLevel', 'eventual')
-  //     .get();
-  //   return res['@odata.count'] || 0;
-  // }
-  // public async getTotalEmployees(): Promise<number> {
-  //   const res = await this.client.api(`/sites/${this.siteId}/lists/${this.listId}`).select('Id').get();
-
-  //   return res?.list?.itemCount ?? 0;
-  // }
-
   public async getTotalEmployees(): Promise<number> {
     const res = await this.client.api(`/sites/${this.siteId}/lists/${this.listId}`).select('displayName,list').get();
 
     return res?.list?.itemCount ?? 0;
   }
 
-  // public async getTotalDepartments(): Promise<number> {
-  //   const res = await this.client
-  //     .api(`/sites/${this.siteId}/lists/${this.listId}/items`)
-  //     .query({ $top: 1, $count: 'true' })
-  //     .header('ConsistencyLevel', 'eventual')
-  //     .get();
-  //   return res['@odata.count'] || 0;
-  // }
   public async getTotalDepartments(): Promise<number> {
     const res = await this.client.api(`/sites/${this.siteId}/lists/${this.listId}`).get();
 
     return res?.list?.itemCount ?? 0;
+  }
+
+  /**
+   * Add a new employee to the Employees list.
+   * @param employee Object containing all employee fields
+   */
+  public async addEmployee(employee: {
+    Title: string;
+    EmployeeID?: string;
+    Email: string;
+    User?: { Title?: string; EMail?: string };
+    Department?: { Title?: string };
+    DepartmentLookupId: number;
+    Role?: string;
+    Manager?: { Title?: string; EMail?: string };
+    DateOfJoining?: string;
+    Status: string;
+    ProfilePhoto?: string;
+  }): Promise<void> {
+    await this.client.api(`/sites/${this.siteId}/lists/${this.listId}/items`).post({
+      fields: {
+        Title: employee.Title,
+        EmployeeID: employee.EmployeeID,
+        Email: employee.Email,
+        // User and Manager fields are often Person/Group fields and may require special handling (e.g., by email or id)
+        // DepartmentLookupId is a lookup field
+        DepartmentLookupId: employee.DepartmentLookupId,
+        Role: employee.Role,
+        DateOfJoining: employee.DateOfJoining,
+        Status: employee.Status,
+        ProfilePhoto: employee.ProfilePhoto,
+        // Manager and User fields may need to be set by claims or email, depending on your list setup
+        // Uncomment and adjust below if your list supports direct assignment by email
+        // User: employee.User?.EMail,
+        // Manager: employee.Manager?.EMail,
+      },
+    });
+  }
+
+  public async searchEmployeesByTitle(title: string): Promise<any[]> {
+    const res = await this.client
+      .api(`/sites/${this.siteId}/lists/${this.listId}/items?$filter=startswith(fields/Title,'${title}')&expand=fields`)
+      .get();
+
+    return res.value.map((i: any) => ({
+      Id: Number(i.id),
+      Title: i.fields.Title,
+      EmployeeID: i.fields.EmployeeID,
+      Email: i.fields.Email,
+      User: i.fields.User ? { Title: i.fields.User?.Title, EMail: i.fields.User?.EMail } : undefined,
+      Department: i.fields.Department ? { Title: i.fields.Department?.Title } : undefined,
+      DepartmentLookupId: i.fields.DepartmentLookupId || i.fields.DepartmentId || i.fields.Department,
+      Role: i.fields.Role,
+      Manager: i.fields.Manager ? { Title: i.fields.Manager?.Title, EMail: i.fields.Manager?.EMail } : undefined,
+      DateOfJoining: i.fields.DateOfJoining,
+      Status: i.fields.Status,
+      ProfilePhoto: i.fields.ProfilePhoto,
+    }));
   }
 }
