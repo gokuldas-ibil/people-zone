@@ -2,6 +2,7 @@ import * as React from 'react';
 import { EmployeeForm } from '../../models/IEmployee';
 import { IDepartment } from '../../models/IDepartment';
 import styles from '../PeopleZone.module.scss';
+import { PZ_ROLES, PZ_STATUS } from '../../services/Constants';
 
 export interface AddEmployeeContainerProps {
   show: boolean;
@@ -23,9 +24,17 @@ const DEFAULT_FORM_STATE: EmployeeForm = {
   ProfilePhoto: '',
 };
 
-const AddEmployeeContainer: React.FC<AddEmployeeContainerProps> = ({ show, onClose, onEmployeeAdded, departments, context }) => {
+const AddEmployeeContainer: React.FC<AddEmployeeContainerProps> = ({
+  show,
+  onClose,
+  onEmployeeAdded,
+  departments,
+  context,
+}) => {
   const [form, setForm] = React.useState<EmployeeForm>(DEFAULT_FORM_STATE);
   const [saving, setSaving] = React.useState<boolean>(false);
+  const [uploading, setUploading] = React.useState<boolean>(false);
+  const [uploadError, setUploadError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (!show) setForm(DEFAULT_FORM_STATE);
@@ -60,13 +69,49 @@ const AddEmployeeContainer: React.FC<AddEmployeeContainerProps> = ({ show, onClo
     setSaving(false);
   };
 
+  // Upload image to SharePoint document library and set ProfilePhoto URL
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadError(null);
+
+    try {
+      const client = await context.msGraphClientFactory.getClient('3');
+
+      const fileName = `${Date.now()}_${file.name}`;
+      const siteId = context.pageContext.site.id.toString();
+
+      // Upload to EmployeePhotos folder in default document library
+      const uploadPath = `/sites/${siteId}/drive/root:/EmployeePhotos/${fileName}:/content`;
+
+      const response = await client.api(uploadPath).put(file); // PUT is required for upload
+
+      /**
+       * response.webUrl → browser URL
+       * response.parentReference.siteId
+       */
+
+      setForm((f) => ({
+        ...f,
+        ProfilePhoto: response.webUrl, // ✔ store this
+      }));
+    } catch (err) {
+      console.error('Graph image upload error:', err);
+      setUploadError('Image upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   if (!show) return null;
 
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modalContent}>
         <h3>Add Employee</h3>
-        <form onSubmit={handleAddEmployee}>
+        <form onSubmit={handleAddEmployee} className={styles.addEmployeeForm}>
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
               <label>Name</label>
@@ -115,11 +160,14 @@ const AddEmployeeContainer: React.FC<AddEmployeeContainerProps> = ({ show, onClo
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
               <label>Role</label>
-              <input
-                type="text"
-                value={form.Role}
-                onChange={(e) => setForm((f) => ({ ...f, Role: e.target.value }))}
-              />
+
+              <select value={form.Role} onChange={(e) => setForm((f) => ({ ...f, Role: e.target.value }))} required>
+                {PZ_ROLES.map((role) => (
+                  <option key={role.value} value={role.value}>
+                    {role.label}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className={styles.formGroup}>
               <label>Manager</label>
@@ -142,24 +190,30 @@ const AddEmployeeContainer: React.FC<AddEmployeeContainerProps> = ({ show, onClo
             </div>
             <div className={styles.formGroup}>
               <label>Status</label>
-              <select
-                value={form.Status}
-                onChange={(e) => setForm((f) => ({ ...f, Status: e.target.value }))}
-                required
-              >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
+              <select value={form.Status} onChange={(e) => setForm((f) => ({ ...f, Status: e.target.value }))} required>
+                {PZ_STATUS.map((status) => (
+                  <option key={status.value} value={status.value}>
+                    {status.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
           <div className={styles.formGroup}>
-            <label>Profile Photo URL</label>
-            <input
-              type="text"
-              value={form.ProfilePhoto}
-              onChange={(e) => setForm((f) => ({ ...f, ProfilePhoto: e.target.value }))}
-              placeholder="Photo URL"
-            />
+            <label>Profile Photo</label>
+            <input type="file" accept="image/*" onChange={handleFileChange} disabled={uploading || saving} />
+            {uploading && <span>Uploading...</span>}
+            {uploadError && <span style={{ color: 'red' }}>{uploadError}</span>}
+            {form.ProfilePhoto && (
+              <div>
+                <img
+                  src={form.ProfilePhoto}
+                  alt="Profile"
+                  style={{ width: 60, height: 60, objectFit: 'cover', marginTop: 8 }}
+                />
+                <div style={{ fontSize: 12, color: '#888' }}>{form.ProfilePhoto}</div>
+              </div>
+            )}
           </div>
           <div className={styles.formActions}>
             <button type="button" onClick={onClose} disabled={saving}>

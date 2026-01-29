@@ -132,4 +132,25 @@ export class GraphService {
       ProfilePhoto: i.fields.ProfilePhoto,
     }));
   }
+
+  public async viewEmployeesByTitle(title: string): Promise<any[]> {
+    const res = await this.client
+      .api(`/sites/${this.siteId}/lists/${this.listId}/items?$filter=startswith(fields/Title,'${title}')&expand=fields`)
+      .get();
+
+    return res.value.map((i: any) => ({
+      Id: Number(i.id),
+      Title: i.fields.Title,
+      EmployeeID: i.fields.EmployeeID,
+      Email: i.fields.Email,
+      User: i.fields.User ? { Title: i.fields.User?.Title, EMail: i.fields.User?.EMail } : undefined,
+      Department: i.fields.Department ? { Title: i.fields.Department?.Title } : undefined,
+      DepartmentLookupId: i.fields.DepartmentLookupId || i.fields.DepartmentId || i.fields.Department,
+      Role: i.fields.Role,
+      Manager: i.fields.Manager ? { Title: i.fields.Manager?.Title, EMail: i.fields.Manager?.EMail } : undefined,
+      DateOfJoining: i.fields.DateOfJoining,
+      Status: i.fields.Status,
+      ProfilePhoto: i.fields.ProfilePhoto,
+    }));
+  }
 }

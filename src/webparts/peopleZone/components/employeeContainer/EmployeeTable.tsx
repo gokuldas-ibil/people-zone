@@ -8,9 +8,10 @@ interface EmployeeTableProps {
   departments: IDepartment[];
   getInitials: (name: string) => string;
   getProfileImageUrl: (employee: IEmployee) => string | null;
+  propViewProfile: (employee: IEmployee) => void;
 }
 
-const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees, departments, getInitials, getProfileImageUrl }) => (
+const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees, departments, getInitials, propViewProfile }) => (
   <div className={styles.employeeList}>
     <div style={{ minWidth: 900 }}>
       <table className={styles.table}>
@@ -30,7 +31,6 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees, departments, g
         </thead>
         <tbody>
           {employees.map((employee) => {
-            const imageUrl = getProfileImageUrl(employee);
             const initials = getInitials(employee.Title);
 
             // Find department name by lookup id (ensure type match)
@@ -46,9 +46,9 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees, departments, g
               <tr key={employee.Id}>
                 <td>{employee.Id}</td>
                 <td>
-                  {imageUrl ? (
+                  {employee?.ProfilePhoto ? (
                     <img
-                      src={imageUrl}
+                      src={employee?.ProfilePhoto}
                       alt={employee.Title}
                       className={styles.profilePhoto}
                       onError={(e) => {
@@ -58,12 +58,15 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees, departments, g
                         }
                       }}
                     />
-                  ) : null}
-                  <div className={styles.noPhoto} style={{ display: imageUrl ? 'none' : 'flex' }}>
-                    {initials}
-                  </div>
+                  ) : (
+                    <div className={styles.noPhoto} style={{ display: employee?.ProfilePhoto ? 'none' : 'flex' }}>
+                      {initials}
+                    </div>
+                  )}
                 </td>
-                <td>{employee.Title}</td>
+                <td onClick={() => propViewProfile(employee)}>
+                  <a>{employee.Title}</a>
+                </td>
                 <td>{employee.EmployeeID || 'N/A'}</td>
                 <td>{employee.Email || 'N/A'}</td>
                 <td>{departmentName}</td>

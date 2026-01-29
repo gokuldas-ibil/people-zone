@@ -7,6 +7,7 @@ import EmployeeTable from './EmployeeTable';
 import EmployeeSummary from './EmployeeSummary';
 import styles from '../PeopleZone.module.scss';
 import AddEmployeeContainer from './AddEmployeeContainer';
+import ProfileContainer from '../shared/profileContainer/ProfileContainer';
 
 const EmployeePage: React.FC<EmployeePageProps> = ({ context, getInitials, getProfileImageUrl }) => {
   const [employees, setEmployees] = React.useState<IEmployee[]>([]);
@@ -19,6 +20,8 @@ const EmployeePage: React.FC<EmployeePageProps> = ({ context, getInitials, getPr
   const [error, setError] = React.useState<string | null>(null);
   const [showAddModal, setShowAddModal] = React.useState<boolean>(false);
   const [search, setSearch] = React.useState<string>('');
+  const [selectedEmployee, setSelectedEmployee] = React.useState<IEmployee | null>(null);
+  const [showProfileModal, setShowProfileModal] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     fetchEmployees();
@@ -92,6 +95,32 @@ const EmployeePage: React.FC<EmployeePageProps> = ({ context, getInitials, getPr
     }
   }, [employees]);
 
+  const getProfileDetails = async (e: React.FormEvent, title: string) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const client = await context.msGraphClientFactory.getClient('3');
+      const service = new GraphService(client);
+      await service.init(context, 'Employees');
+      if (title) {
+        const items = await service.searchEmployeesByTitle(title);
+        setSelectedEmployee(items[0] || null);
+      }
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      setError('Failed to search employees.');
+      // eslint-disable-next-line no-console
+      console.error('Error searching employees:', err);
+    }
+  };
+
+  const viewProfile = (employee: IEmployee) => {
+    getProfileDetails(new Event('submit') as unknown as React.FormEvent, employee.Title);
+    setShowProfileModal(true);
+  };
+
   return (
     <div>
       <button className={styles.addButton} onClick={() => setShowAddModal(true)} style={{ marginBottom: 16 }}>
@@ -146,8 +175,23 @@ const EmployeePage: React.FC<EmployeePageProps> = ({ context, getInitials, getPr
           departments={departments}
           getInitials={getInitials}
           getProfileImageUrl={getProfileImageUrl}
+          propViewProfile={viewProfile}
         />
       </div>
+      {
+        /* Profile Container Modal */ selectedEmployee && showProfileModal && (
+          <ProfileContainer
+            employee={selectedEmployee}
+            departments={departments}
+            getInitials={getInitials}
+            getProfileImageUrl={getProfileImageUrl}
+            onClose={() => {
+              setShowProfileModal(false);
+              setSelectedEmployee(null);
+            }}
+          />
+        )
+      }
     </div>
   );
 };
