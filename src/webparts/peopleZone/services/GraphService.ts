@@ -53,6 +53,44 @@ export class GraphService {
     }));
   }
 
+  /**
+   * Get paginated employees list.
+   * @param top Number of items to fetch per page.
+   * @param skipToken Optional: skip token for pagination (from @odata.nextLink).
+   * @returns { items: any[], nextLink?: string }
+   */
+  public async getEmployeesListWithPagination(
+    top: number = 10,
+    skipToken?: string,
+  ): Promise<{ items: any[]; nextLink?: string }> {
+    let url = `/sites/${this.siteId}/lists/${this.listId}/items?expand=fields&$top=${top}`;
+    if (skipToken) {
+      // Use the nextLink directly if provided
+      url = skipToken;
+    }
+    const res = await this.client.api(url).get();
+
+    const items = res.value.map((i: any) => ({
+      Id: Number(i.id),
+      Title: i.fields.Title,
+      EmployeeID: i.fields.EmployeeID,
+      Email: i.fields.Email,
+      User: i.fields.User ? { Title: i.fields.User?.Title, EMail: i.fields.User?.EMail } : undefined,
+      Department: i.fields.Department ? { Title: i.fields.Department?.Title } : undefined,
+      DepartmentLookupId: i.fields.DepartmentLookupId || i.fields.DepartmentId || i.fields.Department,
+      Role: i.fields.Role,
+      Manager: i.fields.Manager ? { Title: i.fields.Manager?.Title, EMail: i.fields.Manager?.EMail } : undefined,
+      DateOfJoining: i.fields.DateOfJoining,
+      Status: i.fields.Status,
+      ProfilePhoto: i.fields.ProfilePhoto,
+    }));
+
+    return {
+      items,
+      nextLink: res['@odata.nextLink'], // This is the skip token for next page
+    };
+  }
+
   public async getDepartmentsList(): Promise<any[]> {
     const res = await this.client.api(`/sites/${this.siteId}/lists/${this.listId}/items?expand=fields`).get();
     return res.value.map((i: any) => ({

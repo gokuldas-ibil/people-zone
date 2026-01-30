@@ -11,6 +11,7 @@ import ProfileContainer from '../shared/profileContainer/ProfileContainer';
 
 const EmployeePage: React.FC<EmployeePageProps> = ({ context, getInitials, getProfileImageUrl }) => {
   const [employees, setEmployees] = React.useState<IEmployee[]>([]);
+  const [nextLink, setNextLink] = React.useState<string | undefined>(undefined);
   // Ref for scrollable container
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   // Store scroll position before update
@@ -24,13 +25,13 @@ const EmployeePage: React.FC<EmployeePageProps> = ({ context, getInitials, getPr
   const [showProfileModal, setShowProfileModal] = React.useState<boolean>(false);
 
   React.useEffect(() => {
-    fetchEmployees();
+    fetchEmployees(true);
     fetchDepartments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchEmployees = async (): Promise<void> => {
-    // Save scroll position before update
+  // Fetch employees, optionally reset list (for initial load or search)
+  const fetchEmployees = async (reset: boolean = false): Promise<void> => {
     if (scrollContainerRef.current) {
       scrollPositionRef.current = scrollContainerRef.current.scrollTop;
     }
@@ -40,8 +41,9 @@ const EmployeePage: React.FC<EmployeePageProps> = ({ context, getInitials, getPr
       const client = await context.msGraphClientFactory.getClient('3');
       const service = new GraphService(client);
       await service.init(context, 'Employees');
-      const items = await service.getEmployeesList();
+      const { items, nextLink } = await service.getEmployeesListWithPagination(10);
       setEmployees(items);
+      setNextLink(nextLink);
       setLoading(false);
     } catch (err) {
       setLoading(false);
@@ -71,10 +73,12 @@ const EmployeePage: React.FC<EmployeePageProps> = ({ context, getInitials, getPr
       const service = new GraphService(client);
       await service.init(context, 'Employees');
       if (search.trim()) {
+        // For search, do not paginate (reset to first page)
         const items = await service.searchEmployeesByTitle(search.trim());
         setEmployees(items);
+        setNextLink(undefined);
       } else {
-        await fetchEmployees();
+        await fetchEmployees(true);
       }
       setLoading(false);
     } catch (err) {
@@ -119,6 +123,26 @@ const EmployeePage: React.FC<EmployeePageProps> = ({ context, getInitials, getPr
   const viewProfile = (employee: IEmployee) => {
     getProfileDetails(new Event('submit') as unknown as React.FormEvent, employee.Title);
     setShowProfileModal(true);
+  };
+
+  const loadMoreEmployees = async (): Promise<void> => {
+    if (!nextLink) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const client = await context.msGraphClientFactory.getClient('3');
+      const service = new GraphService(client);
+      await service.init(context, 'Employees');
+      const { items, nextLink: newNextLink } = await service.getEmployeesListWithPagination(10, nextLink);
+      setEmployees((prev) => [...prev, ...items]);
+      setNextLink(newNextLink);
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      setError('Failed to load more employees.');
+      // eslint-disable-next-line no-console
+      console.error('Error fetching more employees:', err);
+    }
   };
 
   return (
@@ -177,6 +201,14 @@ const EmployeePage: React.FC<EmployeePageProps> = ({ context, getInitials, getPr
           getProfileImageUrl={getProfileImageUrl}
           propViewProfile={viewProfile}
         />
+        {/* Load More Button */}
+        {nextLink && !loading && (
+          <div style={{ textAlign: 'center', margin: 16 }}>
+            <button className={styles.addButton} onClick={loadMoreEmployees}>
+              Load More
+            </button>
+          </div>
+        )}
       </div>
       {
         /* Profile Container Modal */ selectedEmployee && showProfileModal && (
